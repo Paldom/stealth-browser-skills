@@ -1,0 +1,11 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Stealth browsing with Camoufox",
+      "description": "Install and drive a human-like Camoufox anti-detect browser through Playwright — persistent logins, pinned identity, and built-in detection verification.",
+      "skills": ["camoufox", "camoufox-setup"]
+    }
+  ]
+}

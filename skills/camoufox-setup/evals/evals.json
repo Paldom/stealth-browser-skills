@@ -1,0 +1,63 @@
+{
+  "skill": "camoufox-setup",
+  "cases": [
+    { "type": "should_trigger", "prompt": "set up camoufox" },
+    { "type": "should_trigger", "prompt": "install the stealth browser toolchain" },
+    { "type": "should_trigger", "prompt": "camoufox isn't installed, can you get it working" },
+    { "type": "should_trigger", "prompt": "get my stealth browsing environment ready on this machine" },
+    { "type": "should_trigger", "prompt": "camoufox fetch keeps failing, sort out the install" },
+    { "type": "should_trigger", "prompt": "i need camoufox and the playwright-cli skills installed" },
+    { "type": "should_trigger", "prompt": "bootstrap the anti-detect browser deps" },
+    { "type": "should_trigger", "prompt": "is camoufox set up? if not install it" },
+    { "type": "should_trigger", "prompt": "pip install camoufox and download the firefox binary" },
+    { "type": "should_trigger", "prompt": "prepare the stealth toolchain and install whatever is missing" },
+    { "type": "should_not_trigger", "prompt": "launch a camoufox browser and open example.com" },
+    { "type": "should_not_trigger", "prompt": "resume my saved camoufox profile" },
+    { "type": "should_not_trigger", "prompt": "run camoufox as a websocket server" },
+    { "type": "should_not_trigger", "prompt": "attach a playwright client to my running browser" },
+    { "type": "should_not_trigger", "prompt": "check if my browser passes bot detection" },
+    { "type": "should_not_trigger", "prompt": "why is my camoufox session getting flagged as a bot" },
+    { "type": "should_not_trigger", "prompt": "install the npm dependencies for this project" },
+    { "type": "should_not_trigger", "prompt": "set up a postgres database for the app" },
+    { "type": "should_not_trigger", "prompt": "write a playwright test for the login page" },
+    { "type": "should_not_trigger", "prompt": "update all my python packages to the latest" },
+    {
+      "type": "quality",
+      "prompt": "set up camoufox",
+      "expected_behavior": [
+        "runs the bundled setup_check.py to detect what is already present before changing anything",
+        "installs only the missing pieces (camoufox[geoip] pip package and the camoufox fetch browser binary) — idempotent, no reinstall of what exists",
+        "reports the resolved versions and the browser install path",
+        "does NOT launch a browser or navigate anywhere"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "camoufox fetch failed",
+      "expected_behavior": [
+        "surfaces the actual fetch error (network, proxy, disk space, or permissions) instead of blindly retrying",
+        "re-runs python3 -m camoufox fetch and then verifies the binary path exists and is non-empty",
+        "reports the resolved browser path on success"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "get the stealth environment ready",
+      "expected_behavior": [
+        "detects that camoufox package, browser binary, and playwright-cli skills are already present",
+        "makes no changes and reports an idempotent no-op with the current versions",
+        "does not error or force a reinstall"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "install camoufox and the playwright-cli skills on a machine with no npm",
+      "expected_behavior": [
+        "installs the camoufox package and browser binary (the required components) successfully",
+        "reports that playwright-cli could not be installed because npm/Node is missing, with the exact remediation command",
+        "clarifies that playwright-cli is a separate general browser-automation layer and is not required to drive Camoufox",
+        "exits without falsely claiming the optional playwright-cli step succeeded"
+      ]
+    }
+  ]
+}

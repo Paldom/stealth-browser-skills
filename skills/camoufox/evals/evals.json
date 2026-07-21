@@ -1,0 +1,64 @@
+{
+  "skill": "camoufox",
+  "cases": [
+    { "type": "should_trigger", "prompt": "open camoufox and go to example.com" },
+    { "type": "should_trigger", "prompt": "just start the stealth browser" },
+    { "type": "should_trigger", "prompt": "log into this site with a human-like browser" },
+    { "type": "should_trigger", "prompt": "resume my saved camoufox profile and keep my logins" },
+    { "type": "should_trigger", "prompt": "use camoufox to fill out the form on the dashboard" },
+    { "type": "should_trigger", "prompt": "start a persistent anti-detect browser i can drive" },
+    { "type": "should_trigger", "prompt": "open my stealth session and continue where i left off" },
+    { "type": "should_trigger", "prompt": "am i detected as a bot" },
+    { "type": "should_trigger", "prompt": "check my stealth browser for automation leaks" },
+    { "type": "should_trigger", "prompt": "fire up camoufox headful and navigate to the reports page" },
+    { "type": "should_trigger", "prompt": "do this task in a browser without getting flagged as automation" },
+    { "type": "should_trigger", "prompt": "browse this site stealthily and read the page" },
+    { "type": "should_not_trigger", "prompt": "install camoufox on this machine" },
+    { "type": "should_not_trigger", "prompt": "camoufox fetch failed, fix the setup" },
+    { "type": "should_not_trigger", "prompt": "run camoufox as a websocket server so other scripts can attach" },
+    { "type": "should_not_trigger", "prompt": "keep the browser running and let my node client attach" },
+    { "type": "should_not_trigger", "prompt": "expose camoufox over ws for cross-language clients" },
+    { "type": "should_not_trigger", "prompt": "open a normal chrome browser with playwright" },
+    { "type": "should_not_trigger", "prompt": "write a playwright test for the login page" },
+    { "type": "should_not_trigger", "prompt": "set up xvfb on this linux server" },
+    { "type": "should_not_trigger", "prompt": "what is the best anti-detect browser to use" },
+    { "type": "should_not_trigger", "prompt": "take a screenshot of example.com" },
+    {
+      "type": "quality",
+      "prompt": "open camoufox and log into example.com",
+      "expected_behavior": [
+        "runs the preflight and, if Camoufox is missing/unfetched, invokes camoufox-setup first",
+        "launches with persistent_context=True and a stable user_data_dir, headless=False, humanize=True",
+        "drives the login, then runs the built-in canary verification before trusting the session",
+        "reports the profile path used"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "resume my saved stealth session",
+      "expected_behavior": [
+        "relaunches with the SAME user_data_dir rather than creating a new profile",
+        "confirms persisted cookies/logins are available after restart",
+        "does not wipe or duplicate the profile"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "am I detected?",
+      "expected_behavior": [
+        "runs the bundled canary.py (ephemeral, or --ws against a running server)",
+        "reports the pass/fail scorecard and names any failed required check",
+        "maps a failure to its fix (headful vs headless, geoip/locale coherence, real wheel scroll)"
+      ]
+    },
+    {
+      "type": "quality",
+      "prompt": "browse behind my US residential proxy with camoufox",
+      "expected_behavior": [
+        "passes the proxy as a dict and enables geoip (or sets locale/timezone) so timezone and locale match the proxy geography",
+        "explains that a US IP with a non-US timezone is a detection seam and avoids it",
+        "warns if the geoip extra is missing rather than silently leaking a mismatch"
+      ]
+    }
+  ]
+}
