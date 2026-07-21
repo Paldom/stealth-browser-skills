@@ -240,3 +240,6 @@ Thumbs.db
 # playwright-cli generated config (pins a fingerprint — never commit)
 .playwright/
 *.cli.config.json
+
+# playwright-cli session snapshots
+.playwright-cli/
