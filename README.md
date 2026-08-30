@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.svg" alt="stealth-browser-skills icon" width="128"/>
+</p>
+
 # Stealth Browser Skills
 
 [![CI](https://github.com/Paldom/stealth-browser-skills/actions/workflows/ci.yml/badge.svg)](https://github.com/Paldom/stealth-browser-skills/actions/workflows/ci.yml)
