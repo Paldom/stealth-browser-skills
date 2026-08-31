@@ -18,6 +18,7 @@ Usage:
   python3 setup_check.py --install       # install missing required + optional
   python3 setup_check.py --install --required-only   # skip playwright-cli/Xvfb
 """
+
 from __future__ import annotations
 
 import argparse
@@ -118,8 +119,11 @@ def main() -> int:
             emit("playwright_cli", "OK")
             if args.install:
                 r = run(["playwright-cli", "install", "--skills"])
-                emit("playwright_cli_skills", "OK" if r.returncode == 0 else "WARN",
-                     "" if r.returncode == 0 else "run: playwright-cli install --skills")
+                emit(
+                    "playwright_cli_skills",
+                    "OK" if r.returncode == 0 else "WARN",
+                    "" if r.returncode == 0 else "run: playwright-cli install --skills",
+                )
         elif args.install and shutil.which("npm"):
             emit("playwright_cli", "INSTALLING")
             r = run(["npm", "install", "-g", "@playwright/cli@latest"])
@@ -127,18 +131,34 @@ def main() -> int:
                 run(["playwright-cli", "install", "--skills"])
                 emit("playwright_cli", "OK")
             else:
-                emit("playwright_cli", "WARN", "global npm install failed; try with sudo or a Node version manager")
+                emit(
+                    "playwright_cli",
+                    "WARN",
+                    "global npm install failed; try with sudo or a Node version manager",
+                )
         elif args.install:
-            emit("playwright_cli", "WARN", "npm/Node not found — install Node.js, then: npm i -g @playwright/cli@latest && playwright-cli install --skills")
+            emit(
+                "playwright_cli",
+                "WARN",
+                "npm/Node not found — install Node.js, then: npm i -g @playwright/cli@latest && playwright-cli install --skills",
+            )
         else:
-            emit("playwright_cli", "MISSING", "optional; --install needs npm. It does NOT drive Camoufox (see references/toolchain.md)")
+            emit(
+                "playwright_cli",
+                "MISSING",
+                "optional; --install needs npm. It does NOT drive Camoufox (see references/toolchain.md)",
+            )
 
     # 4) Xvfb on Linux (optional; only for headless="virtual") ----------------
     if not args.required_only and platform.system() == "Linux":
         if shutil.which("Xvfb"):
             emit("xvfb", "OK")
         else:
-            emit("xvfb", "WARN", "needed only for headless='virtual'; install via your package manager (e.g. apt-get install -y xvfb)")
+            emit(
+                "xvfb",
+                "WARN",
+                "needed only for headless='virtual'; install via your package manager (e.g. apt-get install -y xvfb)",
+            )
 
     print(f"RESULT: {'ok' if required_ok else 'fail'}")
     return 0 if required_ok else 1

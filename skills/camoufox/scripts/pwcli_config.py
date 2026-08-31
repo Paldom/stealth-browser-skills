@@ -27,6 +27,7 @@ Usage:
 
 Exit codes: 0 ok, 1 could not build the config, 2 usage.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,8 +45,17 @@ SNAKE2CAMEL = {
     "handle_sighup": "handleSIGHUP",
 }
 # Valid Playwright firefox.launch options we forward (drop anything Camoufox-internal).
-ALLOW = {"executablePath", "args", "env", "firefoxUserPrefs", "ignoreDefaultArgs",
-         "headless", "proxy", "timeout", "downloadsPath"}
+ALLOW = {
+    "executablePath",
+    "args",
+    "env",
+    "firefoxUserPrefs",
+    "ignoreDefaultArgs",
+    "headless",
+    "proxy",
+    "timeout",
+    "downloadsPath",
+}
 
 
 def to_launch_options(raw: dict) -> tuple[dict, list[str]]:
@@ -61,14 +71,20 @@ def to_launch_options(raw: dict) -> tuple[dict, list[str]]:
 def camoufox_launch_options(**kw) -> dict:
     try:
         from camoufox import launch_options
-    except Exception:  # noqa: BLE001 - older/newer layout
+    except Exception:
         from camoufox.utils import launch_options
     return launch_options(**kw)
 
 
 def self_test() -> int:
-    raw = {"executable_path": "/x/camoufox", "args": ["-foo"], "env": {"CAMOU_CONFIG": "{}"},
-           "firefox_user_prefs": {"a": 1}, "headless": True, "some_internal_only": 42}
+    raw = {
+        "executable_path": "/x/camoufox",
+        "args": ["-foo"],
+        "env": {"CAMOU_CONFIG": "{}"},
+        "firefox_user_prefs": {"a": 1},
+        "headless": True,
+        "some_internal_only": 42,
+    }
     lo, dropped = to_launch_options(raw)
     assert lo["executablePath"] == "/x/camoufox"
     assert lo["firefoxUserPrefs"] == {"a": 1}
@@ -80,16 +96,28 @@ def self_test() -> int:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--out", default=".playwright/cli.config.json",
-                    help="config path (default: .playwright/cli.config.json)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--out",
+        default=".playwright/cli.config.json",
+        help="config path (default: .playwright/cli.config.json)",
+    )
     ap.add_argument("--os", dest="os_name", help="fingerprint OS (match the real host)")
-    ap.add_argument("--geoip", action="store_true", help="bake geoip locale/timezone into the launch env")
+    ap.add_argument(
+        "--geoip", action="store_true", help="bake geoip locale/timezone into the launch env"
+    )
     ap.add_argument("--proxy", help="proxy server url, e.g. http://host:port")
-    ap.add_argument("--headless", action="store_true", help="headless (more detectable; default headful)")
-    ap.add_argument("--humanize", type=float, metavar="SECONDS",
-                    help="bake the humanize value into the launch env (note: the wrapper's runtime cursor interpolation is NOT applied under playwright-cli)")
+    ap.add_argument(
+        "--headless", action="store_true", help="headless (more detectable; default headful)"
+    )
+    ap.add_argument(
+        "--humanize",
+        type=float,
+        metavar="SECONDS",
+        help="bake the humanize value into the launch env (note: the wrapper's runtime cursor interpolation is NOT applied under playwright-cli)",
+    )
     ap.add_argument("--self-test", action="store_true", help="test conversion logic, no Camoufox")
     args = ap.parse_args()
 
@@ -108,16 +136,20 @@ def main() -> int:
 
     try:
         raw = camoufox_launch_options(**kw)
-    except Exception as exc:  # noqa: BLE001
-        print(f"ERROR: could not compute Camoufox launch options ({exc}) — run camoufox-setup",
-              file=sys.stderr)
+    except Exception as exc:
+        print(
+            f"ERROR: could not compute Camoufox launch options ({exc}) — run camoufox-setup",
+            file=sys.stderr,
+        )
         print("RESULT: fail")
         return 1
 
     lo, dropped = to_launch_options(raw)
     if not lo.get("executablePath"):
-        print("ERROR: no executablePath from Camoufox — is the browser fetched? (camoufox fetch)",
-              file=sys.stderr)
+        print(
+            "ERROR: no executablePath from Camoufox — is the browser fetched? (camoufox fetch)",
+            file=sys.stderr,
+        )
         print("RESULT: fail")
         return 1
 
@@ -131,10 +163,14 @@ def main() -> int:
     print(f"STATUS executablePath: {lo['executablePath']}")
     if dropped:
         print(f"STATUS dropped (Camoufox-only, already baked into env): {dropped}")
-    print("NOTE: this config PINS ONE fingerprint — regenerate it every run and gitignore "
-          "it, or sessions become correlatable (a frozen fingerprint is MORE detectable).")
-    print(f"STATUS next: playwright-cli open <url> --browser firefox --config {out}   "
-          "(Linux: prefix with `xvfb-run -a` and keep headless off)")
+    print(
+        "NOTE: this config PINS ONE fingerprint — regenerate it every run and gitignore "
+        "it, or sessions become correlatable (a frozen fingerprint is MORE detectable)."
+    )
+    print(
+        f"STATUS next: playwright-cli open <url> --browser firefox --config {out}   "
+        "(Linux: prefix with `xvfb-run -a` and keep headless off)"
+    )
     print("RESULT: ok")
     return 0
 

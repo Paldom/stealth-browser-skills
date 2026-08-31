@@ -7,6 +7,19 @@ versioning: [SemVer](https://semver.org) on the plugin manifest
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-31
+
+### Added
+- Adopted the current skillskit gate: executed trigger evals scoring every
+  trigger prompt against every skill description (rank-1 routing accuracy
+  76.7%), a security scan over skill content and bundled scripts, ruff lint and
+  format, README-shape validation, pre-commit hooks and a write-time lint hook.
+
+### Fixed
+- `camoufox/launch.py`: unclosed try/except/pass replaced with
+  `contextlib.suppress`, and an unnecessary `dict()` call. Found by the new lint gate.
+
+
 ### Added
 - Repository scaffolded from the skills template.
 - **camoufox** — the main entry point: open or resume a headful, human-like Camoufox

@@ -27,9 +27,11 @@ process corrupts it. This script refuses a locked profile unless --force.
 
 Exit codes: 0 ok, 1 preflight/launch failure, 2 usage.
 """
+
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -49,15 +51,17 @@ def profile_locked(profile: str) -> bool:
 def _launch_options(**kw) -> dict:
     try:
         from camoufox import launch_options
-    except Exception:  # noqa: BLE001 - older/newer layout
+    except Exception:
         from camoufox.utils import launch_options
     return launch_options(**kw)
 
 
 def _extract_config(env: dict) -> dict:
     """Reassemble Camoufox's fingerprint (CAMOU_CONFIG, possibly chunked _1/_2/…)."""
-    keys = sorted((k for k in env if re.match(r"^CAMOU_CONFIG(_\d+)?$", k)),
-                  key=lambda k: int(k.rsplit("_", 1)[-1]) if k.rsplit("_", 1)[-1].isdigit() else -1)
+    keys = sorted(
+        (k for k in env if re.match(r"^CAMOU_CONFIG(_\d+)?$", k)),
+        key=lambda k: int(k.rsplit("_", 1)[-1]) if k.rsplit("_", 1)[-1].isdigit() else -1,
+    )
     return json.loads("".join(env[k] for k in keys)) if keys else {}
 
 
@@ -83,16 +87,22 @@ def load_or_create_identity(profile: str, kw: dict) -> tuple[dict, str | None]:
             data = json.load(f)
         saved_ver, cur = data.get("camoufox_version"), _camoufox_version()
         if saved_ver and cur != "?" and saved_ver != cur:
-            print(f"PREFLIGHT: identity pinned on camoufox {saved_ver} but {cur} is installed — "
-                  f"UA/fingerprint may be version-skewed; regenerate (delete {ident}) if the site "
-                  "flags it.", file=sys.stderr)
+            print(
+                f"PREFLIGHT: identity pinned on camoufox {saved_ver} but {cur} is installed — "
+                f"UA/fingerprint may be version-skewed; regenerate (delete {ident}) if the site "
+                "flags it.",
+                file=sys.stderr,
+            )
         return data.get("config") or {}, data.get("os")
     opts = _launch_options(**kw)
     config = _extract_config(opts.get("env", {}))
     os.makedirs(profile, exist_ok=True)
     with open(ident, "w", encoding="utf-8") as f:
-        json.dump({"config": config, "os": kw.get("os"),
-                   "camoufox_version": _camoufox_version()}, f, default=str)
+        json.dump(
+            {"config": config, "os": kw.get("os"), "camoufox_version": _camoufox_version()},
+            f,
+            default=str,
+        )
     return config, kw.get("os")
 
 
@@ -100,14 +110,17 @@ def preflight(profile: str, force: bool) -> list[str]:
     problems: list[str] = []
     try:
         import camoufox  # noqa: F401
-    except Exception as exc:  # noqa: BLE001 - report any import failure
+    except Exception as exc:
         problems.append(f"camoufox not importable ({exc}) — run camoufox-setup")
         return problems  # nothing else works without the package
     try:
-        r = subprocess.run([sys.executable, "-m", "camoufox", "path"],
-                           capture_output=True, text=True, timeout=30)
+        r = subprocess.run(
+            [sys.executable, "-m", "camoufox", "path"], capture_output=True, text=True, timeout=30
+        )
     except (OSError, subprocess.SubprocessError):
-        problems.append("could not run 'python -m camoufox path' (timeout or error) — run camoufox-setup")
+        problems.append(
+            "could not run 'python -m camoufox path' (timeout or error) — run camoufox-setup"
+        )
         return problems
     path = (r.stdout or "").strip()
     try:
@@ -115,13 +128,15 @@ def preflight(profile: str, force: bool) -> list[str]:
     except OSError:
         fetched = False
     if not fetched:
-        problems.append("Camoufox browser binary not fetched — run camoufox-setup "
-                        "(python3 -m camoufox fetch)")
+        problems.append(
+            "Camoufox browser binary not fetched — run camoufox-setup (python3 -m camoufox fetch)"
+        )
     # ponytail: lock-file presence is a heuristic; stale locks exist — hence --force.
     if os.path.isdir(profile) and profile_locked(profile) and not force:
         problems.append(
             f"profile {profile!r} appears to be in use (lock file present); close the "
-            "other Camoufox process, or pass --force if you are sure the lock is stale")
+            "other Camoufox process, or pass --force if you are sure the lock is stale"
+        )
     return problems
 
 
@@ -138,28 +153,44 @@ def _drive(context, args, smoke: bool, profile: str) -> int:
         assert page is not None and len(context.pages) >= 1
         return 0
     print("Browser open. Press Enter (or Ctrl-C) to close.", file=sys.stderr)
-    try:
+    with contextlib.suppress(EOFError, KeyboardInterrupt):
         input()
-    except (EOFError, KeyboardInterrupt):
-        pass
     return 0
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--profile", default=None,
-                    help="persistent user_data_dir (default: ./.camoufox-profile; a throwaway temp dir under --smoke)")
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument(
+        "--profile",
+        default=None,
+        help="persistent user_data_dir (default: ./.camoufox-profile; a throwaway temp dir under --smoke)",
+    )
     ap.add_argument("--url", help="navigate here after launch")
-    ap.add_argument("--headless", choices=["false", "true", "virtual"], default="false",
-                    help="false=headful (default), virtual=Xvfb on Linux, true=headless")
+    ap.add_argument(
+        "--headless",
+        choices=["false", "true", "virtual"],
+        default="false",
+        help="false=headful (default), virtual=Xvfb on Linux, true=headless",
+    )
     ap.add_argument("--os", dest="os_name", help="fingerprint OS; match the real host OS")
-    ap.add_argument("--geoip", action="store_true",
-                    help="align timezone/locale to the egress IP (needs the [geoip] extra)")
-    ap.add_argument("--pin-identity", action="store_true",
-                    help="freeze the fingerprint in the profile for a durable identity (keeps humanize)")
-    ap.add_argument("--humanize-max", type=float, default=None,
-                    help="max seconds of humanized cursor travel (default: on/True)")
+    ap.add_argument(
+        "--geoip",
+        action="store_true",
+        help="align timezone/locale to the egress IP (needs the [geoip] extra)",
+    )
+    ap.add_argument(
+        "--pin-identity",
+        action="store_true",
+        help="freeze the fingerprint in the profile for a durable identity (keeps humanize)",
+    )
+    ap.add_argument(
+        "--humanize-max",
+        type=float,
+        default=None,
+        help="max seconds of humanized cursor travel (default: on/True)",
+    )
     ap.add_argument("--no-humanize", action="store_true", help="disable cursor humanization")
     ap.add_argument("--force", action="store_true", help="open even if the profile looks locked")
     ap.add_argument("--check", action="store_true", help="preflight only, do not launch")
@@ -171,6 +202,7 @@ def main() -> int:
     smoke_tmp = None
     if args.smoke and not args.profile:
         import tempfile
+
         smoke_tmp = tempfile.mkdtemp(prefix="camoufox-smoke-")
         profile = smoke_tmp
     else:
@@ -197,8 +229,12 @@ def main() -> int:
         humanize = args.humanize_max
     os.makedirs(profile, exist_ok=True)
 
-    kwargs = dict(persistent_context=True, user_data_dir=profile,
-                  headless=headless, humanize=humanize)
+    kwargs = {
+        "persistent_context": True,
+        "user_data_dir": profile,
+        "headless": headless,
+        "humanize": humanize,
+    }
     if args.pin_identity:
         # Reuse a saved Camoufox `config` through the wrapper: pins the fingerprint AND
         # keeps humanize (geo is frozen in the config — generate behind your reuse proxy).
@@ -215,8 +251,10 @@ def main() -> int:
             if os_used:
                 kwargs["os"] = os_used
         else:
-            print("PREFLIGHT: could not extract a fingerprint to pin — falling back to a fresh one",
-                  file=sys.stderr)
+            print(
+                "PREFLIGHT: could not extract a fingerprint to pin — falling back to a fresh one",
+                file=sys.stderr,
+            )
     else:
         if args.os_name:
             kwargs["os"] = args.os_name
@@ -225,15 +263,17 @@ def main() -> int:
 
     try:
         from camoufox.sync_api import Camoufox
+
         with Camoufox(**kwargs) as context:
             return _drive(context, args, args.smoke, profile)
-    except Exception as exc:  # noqa: BLE001 - surface launch failure to the agent
+    except Exception as exc:
         print(f"LAUNCH-ERROR: {exc}", file=sys.stderr)
         print("RESULT: fail")
         return 1
     finally:
         if smoke_tmp:
             import shutil
+
             shutil.rmtree(smoke_tmp, ignore_errors=True)
 
 
